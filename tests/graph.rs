@@ -4,7 +4,6 @@
 use log::trace;
 use pretty_assertions::assert_eq;
 use serde_json::{json, Value};
-use uclient::ClientExt;
 
 use arangors::{
     collection::{
@@ -22,25 +21,21 @@ use crate::common::{collection, connection};
 pub mod common;
 
 #[maybe_async::maybe_async]
-async fn drop_all_graphs<C: ClientExt>(db: &Database<C>, names: Vec<&str>) {
+async fn drop_all_graphs(db: &Database, names: Vec<&str>) {
     for name in names.iter() {
         drop_graph(db, name).await;
     }
 }
 
 #[maybe_async::maybe_async]
-async fn drop_graph<C: ClientExt>(db: &Database<C>, name: &str) {
+async fn drop_graph(db: &Database, name: &str) {
     match db.drop_graph(name, false).await {
         Ok(()) => (),
         Err(err) => println!("Failed to drop graph: {:?}", err),
     }
 }
 
-#[maybe_async::test(
-    any(feature = "reqwest_blocking"),
-    async(any(feature = "reqwest_async"), tokio::test),
-    async(any(feature = "surf_async"), async_std::test)
-)]
+#[maybe_async::test(feature = "blocking", async(not(feature = "blocking"), tokio::test))]
 async fn test_simple_graph() {
     test_setup();
     let conn = connection().await;
@@ -65,11 +60,7 @@ async fn test_simple_graph() {
     assert!(result.options.is_none());
 }
 
-#[maybe_async::test(
-    any(feature = "reqwest_blocking"),
-    async(any(feature = "reqwest_async"), tokio::test),
-    async(any(feature = "surf_async"), async_std::test)
-)]
+#[maybe_async::test(feature = "blocking", async(not(feature = "blocking"), tokio::test))]
 async fn test_complex_graph() {
     test_setup();
     let conn = connection().await;
@@ -110,11 +101,7 @@ async fn test_complex_graph() {
     // assert_eq!(options.smart_graph_attribute.unwrap(), "region".to_string());
 }
 
-#[maybe_async::test(
-    any(feature = "reqwest_blocking"),
-    async(any(feature = "reqwest_async"), tokio::test),
-    async(any(feature = "surf_async"), async_std::test)
-)]
+#[maybe_async::test(feature = "blocking", async(not(feature = "blocking"), tokio::test))]
 async fn test_graph_retrieval() {
     test_setup();
     let conn = connection().await;
